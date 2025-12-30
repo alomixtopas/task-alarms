@@ -3,6 +3,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         showLarkAlarm(message.task);
         sendResponse({ success: true });
     }
+
+    if (message.type === "REMOVE_ALARM") {
+        const overlayId = 'lark-alarm-' + message.taskId;
+        const overlay = document.getElementById(overlayId);
+        if (overlay) {
+            overlay.remove();
+        }
+        sendResponse({ success: true });
+    }
 });
 
 function showLarkAlarm(task) {

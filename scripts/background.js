@@ -95,9 +95,18 @@ async function syncLarkTasks() {
     }
 }
 
-const activeAlarms = new Set();
+const activeAlarms = new Map(); // Map<guid, task>
+const activeFallbackWindows = new Map(); // Map<guid, windowId>
+
+// Helper to check if a tab is eligible for content script injection
+function isEligibleTab(tab) {
+    if (!tab || !tab.url) return false;
+    const forbiddenProtocols = ['chrome:', 'edge:', 'about:', 'view-source:', 'chrome-extension:'];
+    return !forbiddenProtocols.some(protocol => tab.url.startsWith(protocol));
+}
 
 async function processTasks(tasks) {
+    // ... (logic processTasks giữ nguyên phần đầu cho đến khi gọi triggerAlarm)
     const now = Date.now();
     const { alert_offset, alert_no_deadline = false, work_hours_only = false } = await chrome.storage.local.get(["alert_offset", "alert_no_deadline", "work_hours_only"]);
     const { snooze_list = {} } = await chrome.storage.local.get("snooze_list");
@@ -107,42 +116,28 @@ async function processTasks(tasks) {
         const hours = date.getHours();
         const minutes = date.getMinutes();
         const currentTimeInMinutes = hours * 60 + minutes;
-
         const startMinutes = 8 * 60 + 30; // 08:30
         const endMinutes = 17 * 60 + 30;  // 17:30
 
         if (currentTimeInMinutes < startMinutes || currentTimeInMinutes > endMinutes) {
-            console.log(`[SKIP] Outside business hours (${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}). Notifications silenced.`);
             return;
         }
     }
 
-    console.log(`Processing ${tasks.length} tasks. Current time: ${new Date(now).toLocaleString()}`);
-
-    // Sort tasks by deadline (earliest first). Missing deadlines go to the end.
     const sortedTasks = [...tasks].sort((a, b) => {
         const tA = a.due_timestamp ? parseInt(a.due_timestamp) : Infinity;
         const tB = b.due_timestamp ? parseInt(b.due_timestamp) : Infinity;
         return tA - tB;
     });
 
-    console.groupCollapsed("🔍 Task Trigger Evaluation Details (Ordered by Deadline)");
-
     for (const task of sortedTasks) {
         if (!task.due_timestamp) {
             if (alert_no_deadline) {
                 const isAlreadyActive = activeAlarms.has(task.guid);
                 const snoozedUntil = snooze_list[task.guid] || 0;
-                const isSnoozed = now <= snoozedUntil;
-
-                if (!isSnoozed && !isAlreadyActive) {
-                    console.log(`[TRIGGER] ❓ ${task.summary} (Untimed Alert Enabled)`);
+                if (now > snoozedUntil && !isAlreadyActive) {
                     triggerAlarm(task);
-                } else {
-                    console.log(`[SKIP] ⏳ ${task.summary} (Untimed, Snoozed: ${isSnoozed}, Active: ${isAlreadyActive})`);
                 }
-            } else {
-                console.log(`[IGNORE] ${task.summary}: No deadline set.`);
             }
             continue;
         }
@@ -153,38 +148,88 @@ async function processTasks(tasks) {
 
         if (now >= alertTime) {
             const snoozedUntil = snooze_list[task.guid] || 0;
-            const isSnoozed = now <= snoozedUntil;
             const isAlreadyActive = activeAlarms.has(task.guid);
-
-            if (!isSnoozed && !isAlreadyActive) {
-                console.log(`[TRIGGER] ✅ ${task.summary}`);
+            if (now > snoozedUntil && !isAlreadyActive) {
                 triggerAlarm(task);
-            } else {
-                console.log(`[SKIP] ⏳ ${task.summary} (Snoozed: ${isSnoozed}, Active: ${isAlreadyActive})`);
             }
-        } else {
-            const waitMin = Math.round((alertTime - now) / 60000);
-            console.log(`[WAIT] 🕒 ${task.summary} (Triggers in ${waitMin} mins)`);
         }
     }
-    console.groupEnd();
 }
 
+// Global broadcast to remove alarm from all tabs
+function broadcastRemoveAlarm(taskId) {
+    chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+            if (isEligibleTab(tab)) {
+                chrome.tabs.sendMessage(tab.id, { type: "REMOVE_ALARM", taskId }).catch(() => { });
+            }
+        });
+    });
+
+    // Also close fallback window if it exists
+    const winId = activeFallbackWindows.get(taskId);
+    if (winId) {
+        chrome.windows.remove(winId).catch(() => { });
+        activeFallbackWindows.delete(taskId);
+    }
+}
+
+// Handle messages
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "REGISTER_DEVICE") {
+        handleDeviceRegistration(message.oauth_proof).then(sendResponse);
+        return true;
+    }
+    if (message.type === "GET_ACCESS_TOKEN") {
+        getAccessToken().then(sendResponse);
+        return true;
+    }
+    if (message.type === "FORCE_SYNC") {
+        activeAlarms.clear();
+        activeFallbackWindows.clear();
+        chrome.storage.local.set({ snooze_list: {} }, () => {
+            syncLarkTasks().then(() => sendResponse({ success: true }));
+        });
+        return true;
+    }
+    if (message.type === "SNOOZE_TASK") {
+        snoozeTask(message.taskId).then(sendResponse);
+        return true;
+    }
+    if (message.type === "ALARM_CLOSED") {
+        activeAlarms.delete(message.taskId);
+        broadcastRemoveAlarm(message.taskId);
+        sendResponse({ success: true });
+        return true;
+    }
+});
+
 function triggerAlarm(task) {
-    if (activeAlarms.has(task.guid)) return;
-    activeAlarms.add(task.guid);
+    const isNew = !activeAlarms.has(task.guid);
+    if (isNew) {
+        activeAlarms.set(task.guid, task);
+    }
 
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, async (tabs) => {
         const activeTab = tabs?.[0];
-        if (activeTab && activeTab.url && !activeTab.url.startsWith('chrome') && !activeTab.url.startsWith('edge')) {
-            chrome.tabs.sendMessage(activeTab.id, { type: "SHOW_ALARM", task }, (response) => {
-                if (chrome.runtime.lastError) {
-                    injectAndShow(activeTab.id, task);
-                }
-            });
-        } else {
+        if (activeTab && isEligibleTab(activeTab)) {
+            ensureAlarmOnTab(activeTab.id, task);
+        } else if (isNew) {
+            // Only open fallback once when the alarm first triggers and we're on a system page
             openFallbackWindow(task);
         }
+    });
+}
+
+function ensureAlarmOnTab(tabId, task) {
+    chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError || !isEligibleTab(tab)) return;
+
+        chrome.tabs.sendMessage(tabId, { type: "SHOW_ALARM", task }, (response) => {
+            if (chrome.runtime.lastError) {
+                injectAndShow(tabId, task);
+            }
+        });
     });
 }
 
@@ -192,13 +237,30 @@ async function injectAndShow(tabId, task) {
     try {
         await chrome.scripting.insertCSS({ target: { tabId }, files: ["styles/content.css"] });
         await chrome.scripting.executeScript({ target: { tabId }, files: ["scripts/content.js"] });
-        chrome.tabs.sendMessage(tabId, { type: "SHOW_ALARM", task });
+        chrome.tabs.sendMessage(tabId, { type: "SHOW_ALARM", task }).catch(() => { });
     } catch (e) {
-        openFallbackWindow(task);
+        // Fail silently, don't trigger more windows here
     }
 }
 
+// Sticky logic: Show active alarms when switching tabs or loading pages
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    activeAlarms.forEach((task) => {
+        ensureAlarmOnTab(activeInfo.tabId, task);
+    });
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && isEligibleTab(tab)) {
+        activeAlarms.forEach((task) => {
+            ensureAlarmOnTab(tabId, task);
+        });
+    }
+});
+
 function openFallbackWindow(task) {
+    if (activeFallbackWindows.has(task.guid)) return;
+
     chrome.windows.getLastFocused({ populate: false }, (currentWin) => {
         const width = 600;
         const height = 500;
@@ -216,14 +278,16 @@ function openFallbackWindow(task) {
             url: popupUrl, type: "popup", width, height,
             left: Math.max(0, left), top: Math.max(0, top), focused: true
         }, (win) => {
-            if (!win) { activeAlarms.delete(task.guid); return; }
-            const listener = (id) => {
-                if (id === win.id) {
-                    activeAlarms.delete(task.guid);
-                    chrome.windows.onRemoved.removeListener(listener);
-                }
-            };
-            chrome.windows.onRemoved.addListener(listener);
+            if (win) {
+                activeFallbackWindows.set(task.guid, win.id);
+                const listener = (id) => {
+                    if (id === win.id) {
+                        activeFallbackWindows.delete(task.guid);
+                        chrome.windows.onRemoved.removeListener(listener);
+                    }
+                };
+                chrome.windows.onRemoved.addListener(listener);
+            }
         });
     });
 }
