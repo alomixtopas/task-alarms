@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "Task Alarms",
+  "version": "1.0",
+  "description": "Tôi đang dõi theo bạn... Đừng để tôi phải bùng cháy! Nhắc việc Lark phong cách 'ức chế' - làm xong ngay hoặc bị ám ảnh mãi mãi.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "scripting",
+    "tabs",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://open.larksuite.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "js": [
+        "scripts/content.js"
+      ],
+      "css": [
+        "styles/content.css"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "pages/popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "32": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "scripts/background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "pages/callback.html",
+        "pages/alarm.html",
+        "scripts/alarm.js",
+        "icon.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

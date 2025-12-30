@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../styles/popup.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <img src="../icon.png" class="logo-img" alt="Task Alarms Logo">
+            <h1>Task Alarms</h1>
+        </div>
+        <div id="status-container" class="status-badge unauthorized">Not Authorized</div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="login-container" class="card">
+        <button id="login-btn">
+            <span>Connect Lark Account</span>
+        </button>
+    </div>
+
+    <!-- Settings Section -->
+    <div id="settings-container" class="card" style="display: none;">
+        <div class="label-group"
+            style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <label style="margin-bottom: 0;">Notify before deadline</label>
+            <div class="input-row" style="align-items: center; gap: 8px;">
+                <input type="number" id="alert-offset-input" value="15" min="1" max="1440"
+                    style="width: 70px; flex: none; text-align: center;">
+                <span style="font-size: 13px; color: #94a3b8;">min</span>
+            </div>
+        </div>
+
+        <div class="label-group" style="margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label>Alert tasks with no due date</label>
+                <input type="checkbox" id="no-deadline-alert-toggle"
+                    style="width: 20px; height: 20px; cursor: pointer;">
+            </div>
+        </div>
+
+        <button id="save-settings-btn">Save Settings</button>
+    </div>
+
+    <!-- Actions Section -->
+    <div id="actions-container" class="card actions" style="display: none;">
+        <button id="sync-tasks-btn">
+            <span>Sync Tasks Now</span>
+        </button>
+        <button id="logout-btn">Logout</button>
+    </div>
+
+    <script src="../scripts/popup.js"></script>
+</body>
+
+</html>

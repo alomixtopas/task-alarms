@@ -1,0 +1,87 @@
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "SHOW_ALARM") {
+        showLarkAlarm(message.task);
+        sendResponse({ success: true });
+    }
+});
+
+function showLarkAlarm(task) {
+    const overlayId = 'lark-alarm-' + task.guid;
+    if (document.getElementById(overlayId)) return;
+
+    const now = Date.now();
+    const dueTime = task.due_timestamp ? parseInt(task.due_timestamp) : 0;
+    const isOverdue = dueTime && now > dueTime;
+    const isWarning = dueTime && !isOverdue && (dueTime - now) <= 30 * 60 * 1000; // 30 minutes
+
+    let modalClass = 'lark-alarm-modal';
+    let icon = '🔔';
+    let headerText = 'Task Reminder';
+
+    if (isOverdue) {
+        modalClass += ' lark-overdue';
+        icon = '🔥';
+        headerText = 'URGENT REMINDER';
+    } else if (isWarning) {
+        modalClass += ' lark-warning';
+        icon = '⚠️';
+        headerText = 'DEADLINE APPROACHING';
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = overlayId;
+    overlay.className = 'lark-alarm-overlay';
+
+    const formatDate = (ts) => {
+        if (!ts) return 'Not set';
+        const d = new Date(parseInt(ts));
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    const dueText = formatDate(task.due_timestamp);
+
+    // Unique ID for the button to avoid conflicts when multiple tasks appear
+    const btnId = 'lark-btn-' + task.guid;
+
+    overlay.innerHTML = `
+        <div class="${modalClass}">
+            <div class="lark-alarm-header">
+                <img src="${chrome.runtime.getURL('icon.png')}" class="lark-logo-img" alt="Logo">
+                <h2>${isOverdue ? '🔥 ' + headerText : (isWarning ? '⚠️ ' + headerText : headerText)}</h2>
+            </div>
+            <div class="lark-alarm-body">
+                <div class="lark-alarm-summary">${task.summary}</div>
+                <div class="lark-alarm-due">Due: ${dueText}</div>
+            </div>
+            <div class="lark-alarm-footer">
+                <button class="lark-alarm-btn" id="${btnId}">Dismiss (Snooze 5m)</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Find the button inside THIS overlay specifically
+    const dismissBtn = overlay.querySelector('#' + btnId);
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            console.log("Button clicked for task:", task.guid);
+
+            // Send messages to background
+            chrome.runtime.sendMessage({ type: "SNOOZE_TASK", taskId: task.guid });
+            chrome.runtime.sendMessage({ type: "ALARM_CLOSED", taskId: task.guid });
+
+            // Remove the overlay immediately from DOM
+            overlay.remove();
+            console.log("Overlay removed for task:", task.guid);
+        });
+    } else {
+        console.error("Could not find dismiss button for task:", task.guid);
+        // Fallback: remove overlay if clicked directly anywhere as a safety measure
+        overlay.onclick = () => overlay.remove();
+    }
+}

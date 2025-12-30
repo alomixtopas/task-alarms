@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+body {
+    width: 340px;
+    margin: 0;
+    padding: 24px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #fdfdfd;
+    color: #1e293b;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    object-fit: contain;
+}
+
+h1 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: #0f172a;
+}
+
+.status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-badge.unauthorized {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.status-badge.authorized {
+    background: #dcfce7;
+    color: #10b981;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+}
+
+input[type="number"] {
+    flex: 1;
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="number"]:focus {
+    border-color: #58cc02;
+}
+
+button {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#save-settings-btn {
+    width: auto;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 10px 16px;
+}
+
+#save-settings-btn:hover {
+    background: #e2e8f0;
+}
+
+#login-btn {
+    background: #58cc02;
+    color: white;
+    box-shadow: 0 4px 12px rgba(88, 204, 2, 0.2);
+}
+
+#login-btn:hover {
+    background: #46a302;
+    transform: translateY(-1px);
+}
+
+#sync-tasks-btn {
+    background: #58cc02;
+    color: white;
+    box-shadow: 0 4px 12px rgba(88, 204, 2, 0.2);
+}
+
+#sync-tasks-btn:hover {
+    background: #46a302;
+    transform: translateY(-1px);
+}
+
+.card+.card {
+    margin-top: 16px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#logout-btn {
+    background: #f8fafc;
+    color: #64748b;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+}
+
+#logout-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fecaca;
+}
+
+.token-view {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 16px;
+    color: #64748b;
+    word-break: break-all;
+    max-height: 100px;
+    overflow-y: auto;
+}

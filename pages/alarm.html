@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Task Reminder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 36px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .logo-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            color: #58cc02;
+        }
+
+        .content {
+            flex: 1;
+            background: white;
+            border-radius: 28px;
+            padding: 36px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .summary {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 34px;
+            /* Fixed height for consistency */
+        }
+
+        .due {
+            font-size: 15px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 8px 18px;
+            border-radius: 100px;
+            width: fit-content;
+        }
+
+        .footer {
+            margin-top: 24px;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #58cc02 0%, #46a302 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(88, 204, 2, 0.2);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Warning/Approaching styling */
+        body.warning h2 {
+            color: #d97706;
+        }
+
+        body.warning button {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        body.warning .due {
+            background: #fffbeb;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        /* Overdue styling if needed (applied via JS) */
+        body.overdue h2 {
+            color: #ef4444;
+        }
+
+        body.overdue button {
+            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+        }
+
+        body.overdue .due {
+            background: #fef2f2;
+            color: #ef4444;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="../icon.png" class="logo-img" alt="Logo">
+        <h2 id="header-title">Task Reminder</h2>
+    </div>
+    <div class="content">
+        <div id="task-summary" class="summary">Loading...</div>
+        <div id="task-due" class="due"></div>
+    </div>
+    <div class="footer">
+        <button id="dismiss-btn">Dismiss (Snooze 5m)</button>
+    </div>
+    <script src="../scripts/alarm.js"></script>
+</body>
+
+</html>
