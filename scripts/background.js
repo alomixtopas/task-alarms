@@ -99,8 +99,23 @@ const activeAlarms = new Set();
 
 async function processTasks(tasks) {
     const now = Date.now();
-    const { alert_offset, alert_no_deadline = false } = await chrome.storage.local.get(["alert_offset", "alert_no_deadline"]);
+    const { alert_offset, alert_no_deadline = false, work_hours_only = false } = await chrome.storage.local.get(["alert_offset", "alert_no_deadline", "work_hours_only"]);
     const { snooze_list = {} } = await chrome.storage.local.get("snooze_list");
+
+    if (work_hours_only) {
+        const date = new Date(now);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const currentTimeInMinutes = hours * 60 + minutes;
+
+        const startMinutes = 8 * 60 + 30; // 08:30
+        const endMinutes = 17 * 60 + 30;  // 17:30
+
+        if (currentTimeInMinutes < startMinutes || currentTimeInMinutes > endMinutes) {
+            console.log(`[SKIP] Outside business hours (${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}). Notifications silenced.`);
+            return;
+        }
+    }
 
     console.log(`Processing ${tasks.length} tasks. Current time: ${new Date(now).toLocaleString()}`);
 

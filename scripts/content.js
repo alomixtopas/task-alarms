@@ -41,8 +41,9 @@ function showLarkAlarm(task) {
 
     const dueText = formatDate(task.due_timestamp);
 
-    // Unique ID for the button to avoid conflicts when multiple tasks appear
-    const btnId = 'lark-btn-' + task.guid;
+    // Unique ID for the buttons to avoid conflicts when multiple tasks appear
+    const dismissBtnId = 'lark-dismiss-btn-' + task.guid;
+    const viewBtnId = 'lark-view-btn-' + task.guid;
 
     overlay.innerHTML = `
         <div class="${modalClass}">
@@ -55,21 +56,33 @@ function showLarkAlarm(task) {
                 <div class="lark-alarm-due">Due: ${dueText}</div>
             </div>
             <div class="lark-alarm-footer">
-                <button class="lark-alarm-btn" id="${btnId}">Dismiss (Snooze 5m)</button>
+                <button class="lark-alarm-btn secondary" id="${viewBtnId}">View Task</button>
+                <button class="lark-alarm-btn primary" id="${dismissBtnId}">Dismiss (5m)</button>
             </div>
         </div>
     `;
 
     document.body.appendChild(overlay);
 
-    // Find the button inside THIS overlay specifically
-    const dismissBtn = overlay.querySelector('#' + btnId);
+    // Find transitions inside THIS overlay specifically
+    const dismissBtn = overlay.querySelector('#' + dismissBtnId);
+    const viewBtn = overlay.querySelector('#' + viewBtnId);
+
+    if (viewBtn) {
+        viewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const taskUrl = `https://applink.larksuite.com/client/todo/detail?guid=${task.guid}`;
+            window.open(taskUrl, '_blank');
+        });
+    }
+
     if (dismissBtn) {
         dismissBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            console.log("Button clicked for task:", task.guid);
+            console.log("Dismiss clicked for task:", task.guid);
 
             // Send messages to background
             chrome.runtime.sendMessage({ type: "SNOOZE_TASK", taskId: task.guid });
@@ -77,11 +90,9 @@ function showLarkAlarm(task) {
 
             // Remove the overlay immediately from DOM
             overlay.remove();
-            console.log("Overlay removed for task:", task.guid);
         });
     } else {
         console.error("Could not find dismiss button for task:", task.guid);
-        // Fallback: remove overlay if clicked directly anywhere as a safety measure
         overlay.onclick = () => overlay.remove();
     }
 }

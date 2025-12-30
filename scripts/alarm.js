@@ -44,4 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dismissBtn = document.getElementById('dismiss-btn');
     if (dismissBtn) dismissBtn.addEventListener('click', dismissAction);
+
+    const viewBtn = document.getElementById('view-btn');
+    if (viewBtn) {
+        viewBtn.addEventListener('click', () => {
+            const taskUrl = `https://applink.larksuite.com/client/todo/detail?guid=${guid}`;
+            window.open(taskUrl, '_blank');
+        });
+    }
 });

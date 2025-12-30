@@ -11,13 +11,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const offsetInput = document.getElementById('alert-offset-input');
     const saveSettingsBtn = document.getElementById('save-settings-btn');
     const noDeadlineToggle = document.getElementById('no-deadline-alert-toggle');
+    const workHoursOnlyToggle = document.getElementById('work-hours-only-toggle');
 
     // Check initial state
     const { device_key } = await chrome.storage.local.get("device_key");
-    const { alert_offset, alert_no_deadline } = await chrome.storage.local.get(["alert_offset", "alert_no_deadline"]);
+    const { alert_offset, alert_no_deadline, work_hours_only } = await chrome.storage.local.get(["alert_offset", "alert_no_deadline", "work_hours_only"]);
 
     if (alert_offset) offsetInput.value = alert_offset;
     if (alert_no_deadline !== undefined) noDeadlineToggle.checked = alert_no_deadline;
+    if (work_hours_only !== undefined) workHoursOnlyToggle.checked = work_hours_only;
 
     updateUI(!!device_key);
 
@@ -29,10 +31,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveSettingsBtn.addEventListener('click', async () => {
         const val = parseInt(offsetInput.value);
         const noDeadlineVal = noDeadlineToggle.checked;
+        const workHoursOnlyVal = workHoursOnlyToggle.checked;
         if (val > 0) {
             await chrome.storage.local.set({
                 alert_offset: val,
-                alert_no_deadline: noDeadlineVal
+                alert_no_deadline: noDeadlineVal,
+                work_hours_only: workHoursOnlyVal
             });
             alert("Settings saved!");
             chrome.runtime.sendMessage({ type: "FORCE_SYNC" });
