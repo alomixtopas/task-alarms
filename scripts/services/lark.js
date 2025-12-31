@@ -37,10 +37,22 @@ export async function fetchLarkTasks() {
         pageToken = result.data.page_token || "";
     }
 
-    return allRawTasks.map(t => ({
-        guid: t.guid,
-        summary: t.summary,
-        due_timestamp: t.due?.timestamp,
-        url: t.url
-    }));
+    return allRawTasks.map(t => {
+        let timestamp = t.due?.timestamp;
+
+        // Handle All Day tasks: Set to 18:00 (6 PM) of that day
+        if (t.due?.is_all_day && timestamp) {
+            const date = new Date(parseInt(timestamp));
+            date.setHours(18, 0, 0, 0);
+            timestamp = date.getTime().toString();
+        }
+
+        return {
+            guid: t.guid,
+            summary: t.summary,
+            due_timestamp: timestamp,
+            url: t.url,
+            is_all_day: t.due?.is_all_day
+        };
+    });
 }
