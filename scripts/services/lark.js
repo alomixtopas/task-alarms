@@ -40,10 +40,10 @@ export async function fetchLarkTasks() {
     return allRawTasks.map(t => {
         let timestamp = t.due?.timestamp;
 
-        // Handle All Day tasks: Set to 18:00 (6 PM) of that day
+        // Handle All Day tasks: Set to 17:30 (5:30 PM) of that day
         if (t.due?.is_all_day && timestamp) {
             const date = new Date(parseInt(timestamp));
-            date.setHours(18, 0, 0, 0);
+            date.setHours(17, 30, 0, 0);
             timestamp = date.getTime().toString();
         }
 
