@@ -81,12 +81,14 @@
     line-height: 1.4;
     margin-bottom: 12px;
     display: -webkit-box;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 36px;
-    /* Fixed height for 1 line */
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    height: 74px;
+    /* Fixed height for 2 lines (26px * 1.4 * 2 ~ 73px) */
 }
 
 .lark-alarm-due {

@@ -63,12 +63,14 @@
             margin-bottom: 24px;
             word-break: break-word;
             display: -webkit-box;
-            -webkit-line-clamp: 1;
-            line-clamp: 1;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 34px;
-            /* Fixed height for consistency */
+            overflow-wrap: anywhere;
+            text-overflow: ellipsis;
+            height: 68px;
+            /* Fixed height for 2 lines (24px * 1.4 * 2 ~ 67px) */
         }
 
         .due {
