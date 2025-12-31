@@ -236,7 +236,7 @@ function ensureAlarmOnTab(tabId, task) {
 async function injectAndShow(tabId, task) {
     try {
         await chrome.scripting.insertCSS({ target: { tabId }, files: ["styles/content.css"] });
-        await chrome.scripting.executeScript({ target: { tabId }, files: ["scripts/content.js"] });
+        await chrome.scripting.executeScript({ target: { tabId }, files: ["scripts/messages.js", "scripts/content.js"] });
         chrome.tabs.sendMessage(tabId, { type: "SHOW_ALARM", task }).catch(() => { });
     } catch (e) {
         // Fail silently, don't trigger more windows here

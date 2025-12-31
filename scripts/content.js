@@ -30,11 +30,11 @@ function showLarkAlarm(task) {
     if (isOverdue) {
         modalClass += ' lark-overdue';
         icon = '🔥';
-        headerText = 'URGENT REMINDER';
+        headerText = (typeof LarkMessages !== 'undefined' ? LarkMessages.getRandom('urgent') : "URGENT REMINDER");
     } else if (isWarning) {
         modalClass += ' lark-warning';
         icon = '⚠️';
-        headerText = 'DEADLINE APPROACHING';
+        headerText = (typeof LarkMessages !== 'undefined' ? LarkMessages.getRandom('warning') : "DEADLINE APPROACHING");
     }
 
     const overlay = document.createElement('div');

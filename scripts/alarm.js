@@ -26,11 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (now > dueTime) {
             document.body.classList.add('overdue');
             const headerTitle = document.getElementById('header-title');
-            if (headerTitle) headerTitle.innerText = "🔥 URGENT REMINDER";
+            if (headerTitle) headerTitle.innerText = "🔥 " + (typeof LarkMessages !== 'undefined' ? LarkMessages.getRandom('urgent') : "URGENT REMINDER");
         } else if (dueTime - now <= 30 * 60 * 1000) {
             document.body.classList.add('warning');
             const headerTitle = document.getElementById('header-title');
-            if (headerTitle) headerTitle.innerText = "⚠️ DEADLINE APPROACHING";
+            if (headerTitle) headerTitle.innerText = "⚠️ " + (typeof LarkMessages !== 'undefined' ? LarkMessages.getRandom('warning') : "DEADLINE APPROACHING");
         }
     }
 
